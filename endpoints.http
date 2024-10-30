@@ -1,0 +1,19 @@
+# POST http://localhost:3000/clientes
+# Content-Type: application/json
+
+# {
+#     "nome_cliente": "Roberto",
+#     "cpf": "16788822365"
+# }
+
+# GET http://localhost:3000/clientes
+
+# PUT http://localhost:3000/clientes/G04o1HcIuTSFsm8TdG39
+# Content-Type: application/json
+
+# {
+#     "nome_cliente": "Pedro",
+#     "cpf": "16788822368"
+# }
+
+DELETE http://localhost:3000/clientes/G04o1HcIuTSFsm8TdG39
