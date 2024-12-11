@@ -137,7 +137,6 @@
     <script>
         const API_BASE = 'http://localhost:3000';
 
-        // Função para navegar entre as seções
         function navigate(sectionId) {
             document.querySelectorAll('section').forEach(section => {
                 section.classList.remove('active');
@@ -145,7 +144,6 @@
             document.getElementById(sectionId).classList.add('active');
         }
 
-        // Função para carregar clientes no frontend
         async function fetchClientes() {
             const response = await fetch(`${API_BASE}/clientes`);
             const clientes = await response.json();
@@ -164,7 +162,6 @@
             });
         }
 
-        // Função para carregar produtos no frontend
         async function fetchProdutos() {
             const response = await fetch(`${API_BASE}/produtos`);
             const produtos = await response.json();
@@ -182,7 +179,6 @@
                 `;
             });
 
-            // Atualiza o select de produtos no PDV
             const selectProdutos = document.getElementById('produtosPDV');
             selectProdutos.innerHTML = '';
             produtos.forEach(produto => {
@@ -193,7 +189,6 @@
             });
         }
 
-        // Função para carregar os clientes no select do PDV
         async function fetchClientesForPDV() {
             const response = await fetch(`${API_BASE}/clientes`);
             const clientes = await response.json();
@@ -207,19 +202,16 @@
             });
         }
 
-        // Função para remover um cliente
         async function removerCliente(id) {
             await fetch(`${API_BASE}/clientes/${id}`, { method: 'DELETE' });
             fetchClientes();
         }
 
-        // Função para remover um produto
         async function removerProduto(id) {
             await fetch(`${API_BASE}/produtos/${id}`, { method: 'DELETE' });
             fetchProdutos();
         }
 
-        // Evento para salvar um novo cliente
         document.getElementById('formClientes').addEventListener('submit', async (e) => {
             e.preventDefault();
             const nome = document.getElementById('nomeCliente').value;
@@ -240,7 +232,6 @@
             fetchClientes();
         });
 
-        // Evento para salvar um novo produto
         document.getElementById('formProdutos').addEventListener('submit', async (e) => {
             e.preventDefault();
             const nomeProduto = document.getElementById('nomeProduto').value;
@@ -261,7 +252,6 @@
             fetchProdutos();
         });
 
-        // Evento para finalizar a venda no PDV
         document.getElementById('formPDV').addEventListener('submit', async (e) => {
             e.preventDefault();
             const clienteId = document.getElementById('clientePDV').value;
@@ -289,7 +279,6 @@
             }
         });
 
-        // Carregar dados iniciais
         fetchClientes();
         fetchProdutos();
         fetchClientesForPDV();
