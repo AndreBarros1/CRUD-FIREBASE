@@ -6,7 +6,7 @@
 #     "cpf": "16788822365"
 # }
 
-# GET http://localhost:3000/clientes
+GET http://localhost:3000/clientes
 
 # PUT http://localhost:3000/clientes/G04o1HcIuTSFsm8TdG39
 # Content-Type: application/json

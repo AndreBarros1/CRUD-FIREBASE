@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de PDV</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 10px;
+            background: #444;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        main {
+            padding: 20px;
+        }
+        section {
+            display: none;
+        }
+        section.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        table th {
+            background-color: #333;
+            color: white;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+        }
+        form input, form button {
+            padding: 10px;
+            font-size: 16px;
+        }
+        button {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Sistema de Ponto de Venda (PDV)</h1>
+    </header>
+    <nav>
+        <a href="#" onclick="navigate('clientes')">Clientes</a>
+        <a href="#" onclick="navigate('produtos')">Produtos</a>
+        <a href="#" onclick="navigate('pdv')">PDV</a>
+    </nav>
+    <main>
+        <section id="clientes" class="active">
+            <h2>Gerenciamento de Clientes</h2>
+            <form id="formClientes">
+                <input type="text" id="nomeCliente" placeholder="Nome do Cliente" required>
+                <input type="text" id="cpfCliente" placeholder="CPF" required>
+                <button type="submit">Salvar Cliente</button>
+            </form>
+            <h3>Lista de Clientes</h3>
+            <table id="tabelaClientes">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>CPF</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+
+        <section id="produtos">
+            <h2>Gerenciamento de Produtos</h2>
+            <form id="formProdutos">
+                <input type="text" id="nomeProduto" placeholder="Nome do Produto" required>
+                <input type="number" step="0.01" id="precoProduto" placeholder="Preço" required>
+                <button type="submit">Salvar Produto</button>
+            </form>
+            <h3>Lista de Produtos</h3>
+            <table id="tabelaProdutos">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Preço</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+
+        <section id="pdv">
+            <h2>Ponto de Venda (PDV)</h2>
+            <form id="formPDV">
+                <select id="clientePDV" required>
+                    <option value="">Selecione um cliente</option>
+                </select>
+                <select id="produtosPDV" multiple required>
+                    <!-- Produtos serão carregados dinamicamente -->
+                </select>
+                <input type="number" step="0.01" id="valorPagoPDV" placeholder="Valor Pago" required>
+                <button type="submit">Finalizar Venda</button>
+            </form>
+            <h3>Cupom Fiscal</h3>
+            <pre id="cupomFiscal"></pre>
+        </section>
+    </main>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        // Função para navegar entre as seções
+        function navigate(sectionId) {
+            document.querySelectorAll('section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+        }
+
+        // Função para carregar clientes no frontend
+        async function fetchClientes() {
+            const response = await fetch(`${API_BASE}/clientes`);
+            const clientes = await response.json();
+            const tabela = document.querySelector('#tabelaClientes tbody');
+            tabela.innerHTML = '';
+            clientes.forEach(cliente => {
+                tabela.innerHTML += `
+                    <tr>
+                        <td>${cliente.nome}</td>
+                        <td>${cliente.cpf}</td>
+                        <td>
+                            <button onclick="removerCliente('${cliente.id}')">Remover</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Função para carregar produtos no frontend
+        async function fetchProdutos() {
+            const response = await fetch(`${API_BASE}/produtos`);
+            const produtos = await response.json();
+            const tabela = document.querySelector('#tabelaProdutos tbody');
+            tabela.innerHTML = '';
+            produtos.forEach(produto => {
+                tabela.innerHTML += `
+                    <tr>
+                        <td>${produto.Nome}</td>
+                        <td>${produto.Preco}</td>
+                        <td>
+                            <button onclick="removerProduto('${produto.id}')">Remover</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Atualiza o select de produtos no PDV
+            const selectProdutos = document.getElementById('produtosPDV');
+            selectProdutos.innerHTML = '';
+            produtos.forEach(produto => {
+                const option = document.createElement('option');
+                option.value = produto.id;
+                option.textContent = `${produto.Nome} - R$ ${produto.Preco}`;
+                selectProdutos.appendChild(option);
+            });
+        }
+
+        // Função para carregar os clientes no select do PDV
+        async function fetchClientesForPDV() {
+            const response = await fetch(`${API_BASE}/clientes`);
+            const clientes = await response.json();
+            const selectCliente = document.getElementById('clientePDV');
+            selectCliente.innerHTML = '<option value="">Selecione um cliente</option>';
+            clientes.forEach(cliente => {
+                const option = document.createElement('option');
+                option.value = cliente.id;
+                option.textContent = cliente.nome;
+                selectCliente.appendChild(option);
+            });
+        }
+
+        // Função para remover um cliente
+        async function removerCliente(id) {
+            await fetch(`${API_BASE}/clientes/${id}`, { method: 'DELETE' });
+            fetchClientes();
+        }
+
+        // Função para remover um produto
+        async function removerProduto(id) {
+            await fetch(`${API_BASE}/produtos/${id}`, { method: 'DELETE' });
+            fetchProdutos();
+        }
+
+        // Evento para salvar um novo cliente
+        document.getElementById('formClientes').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('nomeCliente').value;
+            const cpf = document.getElementById('cpfCliente').value;
+
+            if (!nome || !cpf) {
+                alert('Por favor, preencha todos os campos.');
+                return;
+            }
+
+            await fetch(`${API_BASE}/clientes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, cpf })
+            });
+
+            e.target.reset();
+            fetchClientes();
+        });
+
+        // Evento para salvar um novo produto
+        document.getElementById('formProdutos').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nomeProduto = document.getElementById('nomeProduto').value;
+            const precoProduto = document.getElementById('precoProduto').value;
+
+            if (!nomeProduto || !precoProduto) {
+                alert('Por favor, preencha todos os campos.');
+                return;
+            }
+
+            await fetch(`${API_BASE}/produtos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ Nome: nomeProduto, Preco: parseFloat(precoProduto) })
+            });
+
+            e.target.reset();
+            fetchProdutos();
+        });
+
+        // Evento para finalizar a venda no PDV
+        document.getElementById('formPDV').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const clienteId = document.getElementById('clientePDV').value;
+            const produtosIds = Array.from(document.getElementById('produtosPDV').selectedOptions).map(option => option.value);
+            const valorPago = parseFloat(document.getElementById('valorPagoPDV').value);
+
+            if (!clienteId || produtosIds.length === 0 || valorPago <= 0) {
+                alert('Por favor, preencha todos os campos.');
+                return;
+            }
+
+            const response = await fetch(`${API_BASE}/pdv`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ clienteId, produtosIds, valorPago })
+            });
+
+            if (response.ok) {
+                const cupom = await response.json();
+                document.getElementById('cupomFiscal').textContent = `Cupom Fiscal:\n\nCliente: ${cupom.cliente.nome} ${cupom.cliente.cpf}\nProdutos: ${cupom.itens.map(p => p.nome).join(', ')}\nTotal: R$ ${cupom.valor_total}\nValor Pago: R$ ${cupom.valor_pago}\nTroco: R$ ${cupom.troco}`;
+            } else {
+                const error = await response.text();
+                console.error('Erro ao finalizar a venda:', error);
+                alert('Erro ao finalizar a venda.');
+            }
+        });
+
+        // Carregar dados iniciais
+        fetchClientes();
+        fetchProdutos();
+        fetchClientesForPDV();
+    </script>
+</body>
+</html>
